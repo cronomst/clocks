@@ -1,4 +1,4 @@
-function WallOWatches()
+var WallOWatches = function()
 {
     this.clocks = [];
     this.tasks = [];
@@ -140,12 +140,9 @@ function WallOWatches()
         elem.appendChild(button);
         return elem;
     }
-    
-    // === RUN INIT ===
-//    this.init();
-    // ================
 }
-function Clock(id)
+
+var Clock = function(id)
 {
     this.startTime = 0;
     this.accumulatedTime = 0;
@@ -180,69 +177,33 @@ function Clock(id)
     }
 }
 
-//function ClockTable(wallowatches)
-//{
-//    this.wall = wallowatches;
-//        
-//    this.createTable = function()
-//    {
-//        table = document.createElement("table");
-//        table.setAttribute("border", "1");
-//        
-//        headerRow = document.createElement("tr");
-//        headerRow.appendChild(document.createElement("th"));
-//        table.appendChild(headerRow);
-//        for (i=0; i<this.wall.MAX_PEOPLE; i++) {
-//            th = document.createElement("th");
-//            input = document.createElement("input");
-//            input.id = "name" + i;
-//            input.onchange = function()
-//            {
-//                textChanged(this);
-//            }
-//            th.appendChild(input);
-//            headerRow.appendChild(th);
-//        }
-//        for (i=0; i<this.wall.MAX_TASKS; i++) {
-//            row = document.createElement("tr");
-//            th = document.createElement("th");
-//            th.appendChild(document.createElement("input"));
-//            row.appendChild(th);
-//            table.appendChild(row);
-//            for (j=0; j<this.wall.MAX_PEOPLE; j++) {
-//                td = document.createElement("td");
-//                td.appendChild(this.createClockElement(i, j));
-//                row.appendChild(td);
-//            }
-//        }
-//        return table;
-//    }
-//    
-//    this.createClockElement = function(x,y)
-//    {
-//        elem = document.createElement("div");
-//        elem.id = x + ":" + y;
-//        
-//        label = document.createElement("div");
-//        label.appendChild(document.createTextNode("0:00"));
-//        label.id = "lbl:" + elem.id;
-//        
-//        button = document.createElement("button");
-//        button.appendChild(document.createTextNode("start"));
-//        wall = this.wall;
-//        button.onclick = function() {
-//            wall.toggleClock(x,y);
-//        }
-//        button.id = "btn:" + elem.id;
-//        
-//        elem.appendChild(label);
-//        elem.appendChild(button);
-//        return elem;
-//    }
-//}
+var Persistence = function() {}
+Persistence.read = function(wall)
+{
+    
+}
+Persistence.write = function(wall)
+{
+    
+}
+Persistence.getCookies = function()
+{
+    var cookies = document.cookie.split("; ");
+    var result = {};
+    for (i=0; i<cookies.length; i++) {
+        var keyValue = cookies[i].split("=");
+        result[keyValue[0]] = keyValue[1];
+    }
+    return result;
+}
+Persistence.setCookie = function(key, value)
+{
+    document.cookie = escape(key) + "=" + escape(value);
+}
+
 
 wall = new WallOWatches();
 wall.init();
-
 table = wall.createTable();
 document.body.appendChild(table);
+
