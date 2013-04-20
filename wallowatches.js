@@ -1,11 +1,12 @@
 var WallOWatches = function()
 {
-    this.clocks = [];
-    this.tasks = [];
-    this.people = [];
     this.MAX_PEOPLE = 7;
     this.MAX_TASKS = 9;
     
+    this.clocks = [];
+    this.tasks = [];
+    this.people = [];
+   
     this.init = function()
     {
         for (i=0; i<63; i++) {
@@ -87,27 +88,29 @@ var WallOWatches = function()
     
     this.createTable = function()
     {
-        table = document.createElement("table");
+        var i;
+        var input;
+        var table = document.createElement("table");
         table.setAttribute("border", "1");
         
         headerRow = document.createElement("tr");
         headerRow.appendChild(document.createElement("th"));
         table.appendChild(headerRow);
         for (i=0; i<this.MAX_PEOPLE; i++) {
-            th = document.createElement("th");
+            var th = document.createElement("th");
             input = document.createElement("input");
-            input.id = "name" + i;
-            input.onchange = function()
-            {
-                textChanged(this);
-            }
+            input.id = "person" + i;
+            input.onchange = this.createUpdatePersonFunc(i, input);
             th.appendChild(input);
             headerRow.appendChild(th);
         }
         for (i=0; i<this.MAX_TASKS; i++) {
             row = document.createElement("tr");
             th = document.createElement("th");
-            th.appendChild(document.createElement("input"));
+            input = document.createElement("input");
+            input.id = "task" + i;
+            input.onchange = this.createUpdateTaskFunc(i, input);
+            th.appendChild(input);
             row.appendChild(th);
             table.appendChild(row);
             for (j=0; j<this.MAX_PEOPLE; j++) {
@@ -140,7 +143,26 @@ var WallOWatches = function()
         elem.appendChild(button);
         return elem;
     }
+    
+    this.createUpdatePersonFunc = function(key, input)
+    {
+        var self = this;
+        return function() {
+           self.people[key] = input.value;
+           Persistence.write(self);
+        }
+    }
+    
+    this.createUpdateTaskFunc = function(key, input)
+    {
+        var self = this;
+        return function() {
+            self.tasks[key] = input.value;
+            Persistence.write(self);
+        }
+    }
 }
+
 
 var Clock = function(id)
 {
@@ -184,12 +206,29 @@ Persistence.read = function(wall)
 }
 Persistence.write = function(wall)
 {
+    var clocks = wall.clocks;
+    var tasks = wall.tasks;
+    var people = wall.people;
+    var i;
     
+    for (i=0; i<people.length; i++) {
+        if (people[i])
+            Persistence.setCookie("person" + i, people[i]);
+    }
+    for (i=0; i<tasks.length; i++) {
+        if (tasks[i])
+            Persistence.setCookie("task" + i, tasks[i]);
+    }
+
+//    for (i=0; i<clocks.length; i++) {
+//        var der
+//    }
 }
 Persistence.getCookies = function()
 {
     var cookies = document.cookie.split("; ");
     var result = {};
+    var i;
     for (i=0; i<cookies.length; i++) {
         var keyValue = cookies[i].split("=");
         result[keyValue[0]] = keyValue[1];
@@ -202,8 +241,9 @@ Persistence.setCookie = function(key, value)
 }
 
 
-wall = new WallOWatches();
+var wall = new WallOWatches();
 wall.init();
 table = wall.createTable();
 document.body.appendChild(table);
 
+Persistence.write(wall);
