@@ -12,9 +12,9 @@ var WallOWatches = function()
         for (i=0; i<63; i++) {
             this.clocks.push(new Clock(i));
         }
-        for (i=0; i<this.MAX_PEOPLE; i++) {
-            this.people.push("person" + i);
-        }
+        Persistence.read(this);
+        var table = this.createTable();
+        document.body.appendChild(table);
     }
 
     this.addPerson = function(name)
@@ -38,7 +38,7 @@ var WallOWatches = function()
     this.getClock = function(personIndex, taskIndex)
     {
         if (personIndex >= 0 && taskIndex >= 0) {
-            pos = this.people.length * personIndex + taskIndex;
+            pos = this.MAX_PEOPLE * personIndex + taskIndex;
             return this.clocks[pos];
         }
         return false;
@@ -101,6 +101,9 @@ var WallOWatches = function()
             input = document.createElement("input");
             input.id = "person" + i;
             input.onchange = this.createUpdatePersonFunc(i, input);
+            if (this.people[i]) {
+                input.value = this.people[i];
+            }
             th.appendChild(input);
             headerRow.appendChild(th);
         }
@@ -110,6 +113,9 @@ var WallOWatches = function()
             input = document.createElement("input");
             input.id = "task" + i;
             input.onchange = this.createUpdateTaskFunc(i, input);
+            if (this.tasks[i]) {
+                input.value = this.tasks[i];
+            }
             th.appendChild(input);
             row.appendChild(th);
             table.appendChild(row);
@@ -202,7 +208,20 @@ var Clock = function(id)
 var Persistence = function() {}
 Persistence.read = function(wall)
 {
+    var i;
+    var cookies = Persistence.getCookies();
+    for (i=0; i<wall.MAX_PEOPLE; i++) {
+        if (cookies["person" + i]) {
+            wall.people[i] = cookies["person" + i];
+        }
+    }
     
+    for (i=0; i<wall.MAX_TASKS; i++) {
+        if (cookies["task" + i]) {
+            wall.tasks[i] = cookies["task" + i];
+        }
+    }
+        
 }
 Persistence.write = function(wall)
 {
@@ -212,11 +231,11 @@ Persistence.write = function(wall)
     var i;
     
     for (i=0; i<people.length; i++) {
-        if (people[i])
+        if (typeof people[i] !== 'undefined')
             Persistence.setCookie("person" + i, people[i]);
     }
     for (i=0; i<tasks.length; i++) {
-        if (tasks[i])
+        if (typeof tasks[i] !== 'undefined')
             Persistence.setCookie("task" + i, tasks[i]);
     }
 
@@ -231,7 +250,7 @@ Persistence.getCookies = function()
     var i;
     for (i=0; i<cookies.length; i++) {
         var keyValue = cookies[i].split("=");
-        result[keyValue[0]] = keyValue[1];
+        result[unescape(keyValue[0])] = unescape(keyValue[1]);
     }
     return result;
 }
@@ -240,10 +259,5 @@ Persistence.setCookie = function(key, value)
     document.cookie = escape(key) + "=" + escape(value);
 }
 
-
 var wall = new WallOWatches();
 wall.init();
-table = wall.createTable();
-document.body.appendChild(table);
-
-Persistence.write(wall);
