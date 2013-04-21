@@ -15,6 +15,12 @@ var WallOWatches = function()
         Persistence.read(this);
         var table = this.createTable();
         document.body.appendChild(table);
+        
+        for (y=0; y<this.MAX_PEOPLE; y++) {
+            for (x=0; x<this.MAX_TASKS; x++) {
+                this.updateClockDisplay(x, y);
+            }
+        }
     }
 
     this.addPerson = function(name)
@@ -58,32 +64,41 @@ var WallOWatches = function()
     {
         clock = this.getClock(x,y);
         clock.start();
-        elem = document.getElementById(x + ":" + y);
-        label = document.getElementById("lbl:" + x + ":" + y);
-        button = document.getElementById("btn:" + x + ":" + y);
-        button.innerHTML = "stop";
-        elem.className = "running";
-        self = this;
-        
-        clock.intervalHandle = window.setInterval(
-            function() {
-                document.getElementById("lbl:" + x + ":" + y)
-                    .innerHTML = self.getClock(x,y).getElapsedTime();
-            }
-            , 1000);
+        Persistence.write(this);
+        this.updateClockDisplay(x, y);
 
     }
     this.stopClock = function(x,y)
     {
         clock = this.getClock(x,y);
         clock.stop();
-        window.clearInterval(clock.intervalHandle);
+        Persistence.write(this);
+        this.updateClockDisplay(x, y);
+    }
+    
+    this.updateClockDisplay = function(x,y)
+    {
+        clock = this.getClock(x,y);
         elem = document.getElementById(x + ":" + y);
         label = document.getElementById("lbl:" + x + ":" + y);
         button = document.getElementById("btn:" + x + ":" + y);
-        button.innerHTML = "start";
-        label.innerHTML = clock.getElapsedTime();
-        elem.className = "";
+        if (clock.running) {
+            button.innerHTML = "stop";
+            elem.className = "running";
+            self = this;
+
+            clock.intervalHandle = window.setInterval(
+                function() {
+                    document.getElementById("lbl:" + x + ":" + y)
+                        .innerHTML = self.getClock(x,y).getElapsedTime();
+                }
+                , 1000);
+        } else {
+            window.clearInterval(clock.intervalHandle);
+            button.innerHTML = "start";
+            label.innerHTML = clock.getElapsedTime();
+            elem.className = "";
+        }
     }
     
     this.createTable = function()
@@ -130,11 +145,12 @@ var WallOWatches = function()
     
     this.createClockElement = function(x,y)
     {
+        clock = this.getClock(x,y);
         elem = document.createElement("div");
         elem.id = x + ":" + y;
         
         label = document.createElement("div");
-        label.appendChild(document.createTextNode("0:00"));
+        label.appendChild(document.createTextNode(clock.getElapsedTime()));
         label.id = "lbl:" + elem.id;
         
         button = document.createElement("button");
@@ -221,7 +237,17 @@ Persistence.read = function(wall)
             wall.tasks[i] = cookies["task" + i];
         }
     }
-        
+    
+    var clockJson = cookies["clocks"];
+    if (typeof clockJson !== 'undefined') {
+        var clockData = JSON.parse(clockJson);
+        for (i=0; i<clockData.length; i++) {
+            wall.clocks[clockData[i].id].startTime = clockData[i].start;
+            wall.clocks[clockData[i].id].accumulatedTime = clockData[i].accum;
+            wall.clocks[clockData[i].id].running = clockData[i].running;
+            wall.clocks[clockData[i].id].id = clockData[i].id;
+        }
+    }
 }
 Persistence.write = function(wall)
 {
@@ -238,10 +264,21 @@ Persistence.write = function(wall)
         if (typeof tasks[i] !== 'undefined')
             Persistence.setCookie("task" + i, tasks[i]);
     }
-
-//    for (i=0; i<clocks.length; i++) {
-//        var der
-//    }
+    
+    var clockData = [];
+    for (i=0; i<clocks.length; i++) {
+        if (clocks[i].running || clocks[i].accumulatedTime > 0) {
+            clockData.push( {
+                "start": clocks[i].startTime,
+                "accum": clocks[i].accumulatedTime,
+                "running" : clocks[i].running,
+                "id": clocks[i].id
+            });
+        }
+    }
+    
+    var clocksJson = JSON.stringify(clockData);
+    Persistence.setCookie("clocks", clocksJson);
 }
 Persistence.getCookies = function()
 {
@@ -261,3 +298,11 @@ Persistence.setCookie = function(key, value)
 
 var wall = new WallOWatches();
 wall.init();
+
+var clearBtn = document.createElement("button");
+clearBtn.innerHTML = "Clear times";
+clearBtn.onclick = function() {
+    wall.clocks = [];
+    Persistence.write(wall);
+}
+document.body.appendChild(clearBtn);
