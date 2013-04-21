@@ -329,11 +329,12 @@ Report.generate = function(wall)
         for (persIdx=0; persIdx < wall.people.length; persIdx++) {
             clock = wall.getClock(persIdx, taskIdx);
             if (clock.accumulatedTime > 0) {
-                times += wall.people[persIdx] + ": " + clock.getElapsedTime() + "\n";
+                times += "+ " + wall.people[persIdx] + ": " + clock.getElapsedTime() + "\n";
             }
         }
         if (times != "") {
-            report += "_" + taskName + "_\n"
+            report += taskName + "\n"
+                + "================\n"
                 + times + "\n";
         }
     }
