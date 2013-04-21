@@ -7,7 +7,7 @@ var WallOWatches = function()
     this.tasks = [];
     this.people = [];
    
-    this.init = function()
+    this.start = function()
     {
         for (taskIdx=0; taskIdx<this.MAX_COLUMNS * this.MAX_ROWS; taskIdx++) {
             this.clocks.push(new Clock(taskIdx));
@@ -16,11 +16,55 @@ var WallOWatches = function()
         var table = this.createTable();
         document.body.appendChild(table);
         
+        document.body.appendChild(this.createControls());
+        
         for (y=0; y<this.MAX_COLUMNS; y++) {
             for (x=0; x<this.MAX_ROWS; x++) {
                 this.updateClockDisplay(x, y);
             }
         }
+    }
+    
+    this.createControls = function()
+    {
+        /// Creates and returns the extra controls outside the main table such as the
+        /// buttons to erase the data and generate the report.
+        var wall = this;
+        var controlsElement = document.createElement("div");
+        controlsElement.id = "controls";
+        
+        var clearBtn = document.createElement("button");
+        clearBtn.innerHTML = "Clear times";
+        clearBtn.onclick = function() {
+            var conf = confirm("Erase all time data?");
+            if (conf) {
+                wall.clocks = [];
+                Persistence.write(wall);
+                location.reload();
+            }
+        }
+        controlsElement.appendChild(clearBtn);
+
+        var clearAll = document.createElement("button");
+        clearAll.innerHTML = "Clear everything";
+        clearAll.onclick = function() {
+            var conf = confirm("Are you sure you want to erase all time AND name data?")
+            if (conf) {
+                Persistence.clearData();
+                location.reload();
+            }
+        }
+        controlsElement.appendChild(clearAll);
+
+        var reportBtn = document.createElement("button");
+        reportBtn.innerHTML = "Generate report";
+        reportBtn.onclick = function()
+        {
+            alert(Report.generate(wall));
+        }
+        controlsElement.appendChild(reportBtn);
+        
+        return controlsElement;
     }
     
     this.get2Dto1D = function(x, y)
@@ -343,35 +387,4 @@ Report.generate = function(wall)
 }
 
 var wall = new WallOWatches();
-wall.init();
-
-var clearBtn = document.createElement("button");
-clearBtn.innerHTML = "Clear times";
-clearBtn.onclick = function() {
-    var conf = confirm("Erase all time data?");
-    if (conf) {
-        wall.clocks = [];
-        Persistence.write(wall);
-        location.reload();
-    }
-}
-document.body.appendChild(clearBtn);
-
-var clearAll = document.createElement("button");
-clearAll.innerHTML = "Clear everything";
-clearAll.onclick = function() {
-    var conf = confirm("Are you sure you want to erase all time AND name data?")
-    if (conf) {
-        Persistence.clearData();
-        location.reload();
-    }
-}
-document.body.appendChild(clearAll);
-
-var reportBtn = document.createElement("button");
-reportBtn.innerHTML = "Generate report";
-reportBtn.onclick = function()
-{
-    console.log(Report.generate(wall));
-}
-document.body.appendChild(reportBtn);
+wall.start();
