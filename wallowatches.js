@@ -60,7 +60,10 @@ var WallOWatches = function()
         reportBtn.innerHTML = "Generate report";
         reportBtn.onclick = function()
         {
-            alert(Report.generate(wall));
+            var report = Report.generate(wall);
+            if (confirm("PREVIEW:\n\n" + Report.generate(wall))) {
+                window.location = "report/?data=" + escape(report);
+            }
         }
         controlsElement.appendChild(reportBtn);
         
