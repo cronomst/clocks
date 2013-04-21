@@ -103,7 +103,6 @@ var WallOWatches = function()
         var i;
         var input;
         var table = document.createElement("table");
-        table.setAttribute("border", "1");
         
         headerRow = document.createElement("tr");
         headerRow.appendChild(document.createElement("th"));
