@@ -9,8 +9,8 @@ var WallOWatches = function()
    
     this.init = function()
     {
-        for (i=0; i<this.MAX_COLUMNS * this.MAX_ROWS; i++) {
-            this.clocks.push(new Clock(i));
+        for (taskIdx=0; taskIdx<this.MAX_COLUMNS * this.MAX_ROWS; taskIdx++) {
+            this.clocks.push(new Clock(taskIdx));
         }
         Persistence.read(this);
         var table = this.createTable();
@@ -110,10 +110,10 @@ var WallOWatches = function()
         for (i=0; i<this.MAX_COLUMNS; i++) {
             var th = document.createElement("th");
             input = document.createElement("input");
-            input.id = "person" + i;
-            input.onchange = this.createUpdatePersonFunc(i, input);
-            if (this.people[i]) {
-                input.value = this.people[i];
+            input.id = "task" + i;
+            input.onchange = this.createUpdateTaskFunc(i, input);
+            if (this.tasks[i]) {
+                input.value = this.tasks[i];
             }
             th.appendChild(input);
             headerRow.appendChild(th);
@@ -122,10 +122,10 @@ var WallOWatches = function()
             row = document.createElement("tr");
             th = document.createElement("th");
             input = document.createElement("input");
-            input.id = "task" + i;
-            input.onchange = this.createUpdateTaskFunc(i, input);
-            if (this.tasks[i]) {
-                input.value = this.tasks[i];
+            input.id = "person" + i;
+            input.onchange = this.createUpdatePersonFunc(i, input);
+            if (this.people[i]) {
+                input.value = this.people[i];
             }
             th.appendChild(input);
             row.appendChild(th);
@@ -183,6 +183,8 @@ var WallOWatches = function()
             Persistence.write(self);
         }
     }
+    
+    
 }
 
 
@@ -245,7 +247,6 @@ Persistence.read = function(wall)
     if (typeof clockJson !== 'undefined') {
         var clockData = JSON.parse(clockJson);
         for (i=0; i<clockData.length; i++) {
-            console.log(i + "=" + clockData[i].id);
             wall.clocks[clockData[i].id].startTime = clockData[i].start;
             wall.clocks[clockData[i].id].accumulatedTime = clockData[i].accum;
             wall.clocks[clockData[i].id].running = clockData[i].running;
@@ -314,6 +315,32 @@ Persistence.clearData = function()
     }    
 }
 
+var Report = function() {}
+Report.generate = function(wall)
+{
+    /// Creates a report of all of the times for each task/person
+    /// as a string.
+    var report = "";
+    var taskIdx;
+    var persIdx;
+    for (taskIdx=0; taskIdx<wall.tasks.length; taskIdx++) {
+        var times = "";
+        var taskName = (typeof wall.tasks[taskIdx] === "undefined") ? "(No name set)" : wall.tasks[taskIdx];
+        for (persIdx=0; persIdx < wall.people.length; persIdx++) {
+            clock = wall.getClock(persIdx, taskIdx);
+            if (clock.accumulatedTime > 0) {
+                times += wall.people[persIdx] + ": " + clock.getElapsedTime() + "\n";
+            }
+        }
+        if (times != "") {
+            report += "_" + taskName + "_\n"
+                + times + "\n";
+        }
+    }
+
+    return report;
+}
+
 var wall = new WallOWatches();
 wall.init();
 
@@ -339,3 +366,11 @@ clearAll.onclick = function() {
     }
 }
 document.body.appendChild(clearAll);
+
+var reportBtn = document.createElement("button");
+reportBtn.innerHTML = "Generate report";
+reportBtn.onclick = function()
+{
+    console.log(Report.generate(wall));
+}
+document.body.appendChild(reportBtn);
