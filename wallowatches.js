@@ -225,7 +225,7 @@ var Persistence = function() {}
 Persistence.read = function(wall)
 {
     var i;
-    var cookies = Persistence.getCookies();
+    var cookies = Persistence.getAllItems();
     for (i=0; i<wall.MAX_PEOPLE; i++) {
         if (cookies["person" + i]) {
             wall.people[i] = cookies["person" + i];
@@ -258,11 +258,11 @@ Persistence.write = function(wall)
     
     for (i=0; i<people.length; i++) {
         if (typeof people[i] !== 'undefined')
-            Persistence.setCookie("person" + i, people[i]);
+            Persistence.setItem("person" + i, people[i]);
     }
     for (i=0; i<tasks.length; i++) {
         if (typeof tasks[i] !== 'undefined')
-            Persistence.setCookie("task" + i, tasks[i]);
+            Persistence.setItem("task" + i, tasks[i]);
     }
     
     var clockData = [];
@@ -278,22 +278,34 @@ Persistence.write = function(wall)
     }
     
     var clocksJson = JSON.stringify(clockData);
-    Persistence.setCookie("clocks", clocksJson);
+    Persistence.setItem("clocks", clocksJson);
 }
-Persistence.getCookies = function()
+Persistence.getAllItems = function()
 {
-    var cookies = document.cookie.split("; ");
     var result = {};
     var i;
-    for (i=0; i<cookies.length; i++) {
-        var keyValue = cookies[i].split("=");
-        result[unescape(keyValue[0])] = unescape(keyValue[1]);
+    for (i=0; i<localStorage.length; i++) {
+        var key = localStorage.key(i);
+        var value = localStorage.getItem(key);
+        result[key] = value;
     }
     return result;
 }
-Persistence.setCookie = function(key, value)
+Persistence.setItem = function(key, value)
 {
-    document.cookie = escape(key) + "=" + escape(value);
+    localStorage.setItem(key, value);
+}
+Persistence.clearData = function()
+{
+    /// Erases all persistence data
+    var keys = [];
+    var i;
+    for (i=0; i<localStorage.length; i++) {
+        keys.push(localStorage.key(i));
+    }
+    for (i=0; i<keys.length; i++) {
+        localStorage.removeItem(keys[i]);
+    }    
 }
 
 var wall = new WallOWatches();
@@ -306,3 +318,8 @@ clearBtn.onclick = function() {
     Persistence.write(wall);
 }
 document.body.appendChild(clearBtn);
+
+var clearAll = document.createElement("button");
+clearAll.innerHTML = "Clear everything";
+clearAll.onclick = Persistence.clearData;
+document.body.appendChild(clearAll);
