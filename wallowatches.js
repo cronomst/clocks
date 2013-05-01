@@ -183,6 +183,18 @@ var WallOWatches = function()
                 row.appendChild(td);
             }
         }
+        // Create reset column buttons
+        var clearRow = document.createElement("tr");
+        table.appendChild(clearRow);
+        clearRow.appendChild(document.createElement("td"));
+        for (i=0; i<this.MAX_COLUMNS; i++) {
+            var td = document.createElement("td");
+            var btn = document.createElement("button");
+            btn.innerHTML = "Reset<br>column";
+            btn.onclick = this.createResetColumnFunc(i);
+            td.appendChild(btn);
+            clearRow.appendChild(td);
+        }
         return table;
     }
     
@@ -231,7 +243,28 @@ var WallOWatches = function()
         }
     }
     
+    this.createResetColumnFunc = function(column)
+    {
+        /// Creates a callback used to reset the column's clocks
+        var self = this;
+        return function() {
+            var conf = confirm("Are you sure you want to reset this entire column's times?")
+            if (conf) {
+                self.resetColumn(column);
+            }
+        }
+    }    
     
+    this.resetColumn = function(column)
+    {
+        var row;
+        for (row=0; row< this.MAX_ROWS; row++) {
+            var clock = this.getClock(row, column);
+            clock.reset();
+            this.updateClockDisplay(row, column);
+        }
+        Persistence.write(this);
+    }    
 }
 
 
@@ -269,6 +302,15 @@ var Clock = function(id)
             seconds = "0" + seconds;
         
         return minutes + ":" + seconds;
+    }
+    
+    this.reset = function()
+    {
+        /// Resets this clock
+        if (this.running) {
+            this.stop();
+        }
+        this.accumulatedTime = 0;
     }
 }
 
